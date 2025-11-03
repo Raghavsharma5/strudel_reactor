@@ -10,6 +10,7 @@ import { registerSoundfonts } from '@strudel/soundfonts';
 import { stranger_tune } from './tunes';
 import console_monkey_patch, { getD3Data } from './console-monkey-patch';
 import AudioControls from './AudioControls';
+import PreprocessingEditor from './PreprocessingEditor';
 
 let globalEditor = null;
 
