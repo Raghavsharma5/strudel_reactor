@@ -1,5 +1,5 @@
 import './App.css';
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { StrudelMirror } from '@strudel/codemirror';
 import { evalScope } from '@strudel/core';
 import { drawPianoroll } from '@strudel/draw';
@@ -19,17 +19,16 @@ const handleD3Data = (event) => {
 };
 
 
-export function ProcAndPlay() {
+export function ProcAndPlay(proc_text) {
     if (globalEditor != null && globalEditor.repl.state.started == true) {
         console.log(globalEditor)
-        Proc()
+        Proc(proc_text)
         globalEditor.evaluate();
     }
 }
 
-export function Proc() {
+export function Proc(proc_text) {  
 
-    let proc_text = document.getElementById('proc').value
     let proc_text_replaced = proc_text.replaceAll('<p1_Radio>', ProcessText);
     ProcessText(proc_text);
     globalEditor.setCode(proc_text_replaced)
@@ -48,6 +47,8 @@ export function ProcessText(match, ...args) {
 export default function StrudelDemo() {
 
 const hasRun = useRef(false);
+
+const [preprocessText, setPreprocessText] = useState('');
 
 useEffect(() => {
 
@@ -82,8 +83,8 @@ useEffect(() => {
                 },
             });
             
-        document.getElementById('proc').value = stranger_tune
-        Proc()
+        setPreprocessText(stranger_tune);
+        Proc(stranger_tune);
     }
 
 }, []);
@@ -96,15 +97,15 @@ return (
 
             <div className="container-fluid">
                 <div className="row">
-                    <div className="col-md-8" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-                        <label htmlFor="exampleFormControlTextarea1" className="form-label">Text to preprocess:</label>
-                        <textarea className="form-control" rows="15" id="proc" ></textarea>
-                    </div>
+                    <PreprocessingEditor 
+                        value={preprocessText}
+                        onChange={(e) => setPreprocessText(e.target.value)}
+                    />
                     <div className="col-md-4">
                         <AudioControls 
                             onPlay={() => globalEditor.evaluate()}
                             onStop={() => globalEditor.stop()}
-                            onPreprocess={Proc}
+                            onPreprocess={() => Proc(preprocessText)}
                             onProcessPlay={() => {
                                 if (globalEditor != null) {
                                     Proc();
@@ -121,13 +122,13 @@ return (
                     </div>
                     <div className="col-md-4">
                         <div className="form-check">
-                            <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" onChange={ProcAndPlay} defaultChecked />
+                            <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" onChange={() => ProcAndPlay(preprocessText)} defaultChecked />
                             <label className="form-check-label" htmlFor="flexRadioDefault1">
                                 p1: ON
                             </label>
                         </div>
                         <div className="form-check">
-                            <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" onChange={ProcAndPlay} />
+                            <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" onChange={() => ProcAndPlay(preprocessText)} />
                             <label className="form-check-label" htmlFor="flexRadioDefault2">
                                 p1: HUSH
                             </label>
