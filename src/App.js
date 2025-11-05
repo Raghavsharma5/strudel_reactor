@@ -18,16 +18,25 @@ const handleD3Data = (event) => {
     console.log(event.detail);
 };
 
-
 export function ProcAndPlay(proc_text) {
-    if (globalEditor != null && globalEditor.repl.state.started == true) {
-        console.log(globalEditor)
-        Proc(proc_text)
-        globalEditor.evaluate();
+    if (!proc_text) {
+        console.log("No text to process yet");
+        return;
+    }
+    
+    if (globalEditor != null) {
+        Proc(proc_text);  
+        
+        if (globalEditor.repl.state.started == true) {
+            globalEditor.evaluate();
+        }
     }
 }
 
-export function Proc(proc_text) {  
+export function Proc(proc_text) {
+    if (!proc_text || !globalEditor) {
+        return;
+    }
 
     let proc_text_replaced = proc_text.replaceAll('<p1_Radio>', ProcessText);
     ProcessText(proc_text);
@@ -35,34 +44,30 @@ export function Proc(proc_text) {
 }
 
 export function ProcessText(match, ...args) {
-
     let replace = ""
     if (document.getElementById('flexRadioDefault2').checked) {
         replace = "_"
     }
-
     return replace
 }
 
 export default function StrudelDemo() {
 
-const hasRun = useRef(false);
+    const hasRun = useRef(false);
+    const [preprocessText, setPreprocessText] = useState('');
 
-const [preprocessText, setPreprocessText] = useState('');
-
-useEffect(() => {
-
-    if (!hasRun.current) {
-        document.addEventListener("d3Data", handleD3Data);
-        console_monkey_patch();
-        hasRun.current = true;
-        //Code copied from example: https://codeberg.org/uzu/strudel/src/branch/main/examples/codemirror-repl
-            //init canvas
+    useEffect(() => {
+        if (!hasRun.current) {
+            document.addEventListener("d3Data", handleD3Data);
+            console_monkey_patch();
+            hasRun.current = true;
+            
             const canvas = document.getElementById('roll');
             canvas.width = canvas.width * 2;
             canvas.height = canvas.height * 2;
             const drawContext = canvas.getContext('2d');
-            const drawTime = [-2, 2]; // time window of drawn haps
+            const drawTime = [-2, 2]; 
+            
             globalEditor = new StrudelMirror({
                 defaultOutput: webaudioOutput,
                 getTime: () => getAudioContext().currentTime,
@@ -71,7 +76,7 @@ useEffect(() => {
                 drawTime,
                 onDraw: (haps, time) => drawPianoroll({ haps, time, ctx: drawContext, drawTime, fold: 0 }),
                 prebake: async () => {
-                    initAudioOnFirstClick(); // needed to make the browser happy (don't await this here..)
+                    initAudioOnFirstClick(); 
                     const loadModules = evalScope(
                         import('@strudel/core'),
                         import('@strudel/draw'),
@@ -83,63 +88,76 @@ useEffect(() => {
                 },
             });
             
-        setPreprocessText(stranger_tune);
-        Proc(stranger_tune);
-    }
+            
+            setTimeout(() => {
+                setPreprocessText(stranger_tune);
+                if (globalEditor) {
+                    Proc(stranger_tune);
+                }
+            }, 100);
+        }
+    }, []);
 
-}, []);
-
-
-return (
-    <div>
-        <h2>Strudel Demo</h2>
-        <main>
-
-            <div className="container-fluid">
-                <div className="row">
-                    <PreprocessingEditor 
-                        value={preprocessText}
-                        onChange={(e) => setPreprocessText(e.target.value)}
-                    />
-                    <div className="col-md-4">
-                        <AudioControls 
-                            onPlay={() => globalEditor.evaluate()}
-                            onStop={() => globalEditor.stop()}
-                            onPreprocess={() => Proc(preprocessText)}
-                            onProcessPlay={() => {
-                                if (globalEditor != null) {
-                                    Proc();
-                                    globalEditor.evaluate();
-                                }
-                            }}
+    return (
+        <div>
+            <h2>Strudel Demo</h2>
+            <main>
+                <div className="container-fluid">
+                    <div className="row">
+                        <PreprocessingEditor 
+                            value={preprocessText}
+                            onChange={(e) => setPreprocessText(e.target.value)}
                         />
-                    </div>
-                </div>
-                <div className="row">
-                    <div className="col-md-8" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
-                        <div id="editor" />
-                        <div id="output" />
-                    </div>
-                    <div className="col-md-4">
-                        <div className="form-check">
-                            <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault1" onChange={() => ProcAndPlay(preprocessText)} defaultChecked />
-                            <label className="form-check-label" htmlFor="flexRadioDefault1">
-                                p1: ON
-                            </label>
-                        </div>
-                        <div className="form-check">
-                            <input className="form-check-input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" onChange={() => ProcAndPlay(preprocessText)} />
-                            <label className="form-check-label" htmlFor="flexRadioDefault2">
-                                p1: HUSH
-                            </label>
+                        <div className="col-md-4">
+                            <AudioControls 
+                                onPlay={() => globalEditor.evaluate()}
+                                onStop={() => globalEditor.stop()}
+                                onPreprocess={() => Proc(preprocessText)}
+                                onProcessPlay={() => {
+                                    if (globalEditor != null) {
+                                        Proc(preprocessText);
+                                        globalEditor.evaluate();
+                                    }
+                                }}
+                            />
                         </div>
                     </div>
+                    <div className="row">
+                        <div className="col-md-8" style={{ maxHeight: '50vh', overflowY: 'auto' }}>
+                            <div id="editor" />
+                            <div id="output" />
+                        </div>
+                        <div className="col-md-4">
+                            <div className="form-check">
+                                <input 
+                                    className="form-check-input" 
+                                    type="radio" 
+                                    name="flexRadioDefault" 
+                                    id="flexRadioDefault1" 
+                                    onChange={() => ProcAndPlay(preprocessText)} 
+                                    defaultChecked 
+                                />
+                                <label className="form-check-label" htmlFor="flexRadioDefault1">
+                                    p1: ON
+                                </label>
+                            </div>
+                            <div className="form-check">
+                                <input 
+                                    className="form-check-input" 
+                                    type="radio" 
+                                    name="flexRadioDefault" 
+                                    id="flexRadioDefault2" 
+                                    onChange={() => ProcAndPlay(preprocessText)} 
+                                />
+                                <label className="form-check-label" htmlFor="flexRadioDefault2">
+                                    p1: HUSH
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-            <canvas id="roll"></canvas>
-        </main >
-    </div >
-);
-
-
+                <canvas id="roll"></canvas>
+            </main>
+        </div>
+    );
 }
