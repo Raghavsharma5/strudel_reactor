@@ -42,7 +42,7 @@ const bass = 0
 <p2_Checkbox>bassline:
 note(pick(basslines, bass))
 .sound("supersaw")
-.postgain(<volume_Slider>2</volume_Slider>)
+.postgain(<volume_Slider>2</volume_Slider>)  
 .room(0.6)
 .lpf(700)
 .room(0.4)
