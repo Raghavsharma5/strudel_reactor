@@ -25,9 +25,8 @@ export function ProcAndPlay(proc_text) {
     }
     
     if (globalEditor != null) {
-        Proc(proc_text);  // Always preprocess
+        Proc(proc_text);
         
-        // Only restart music if it's already playing
         if (globalEditor.repl.state.started == true) {
             globalEditor.evaluate();
         }
@@ -35,7 +34,6 @@ export function ProcAndPlay(proc_text) {
 }
 
 export function Proc(proc_text) {
-    // Safety checks
     if (!proc_text || !globalEditor) {
         console.log("Proc: text or editor not ready");
         return;
@@ -51,7 +49,7 @@ export function ProcessText(match, ...args) {
     let replace = "";
     if (document.getElementById('flexRadioDefault2').checked) {
         replace = "//";
-        console.log("HUSH mode - returning underscore");
+        console.log("HUSH mode - commenting out");
     } else {
         console.log("ON mode - returning empty string");
     }
@@ -73,7 +71,7 @@ export default function StrudelDemo() {
             canvas.width = canvas.width * 2;
             canvas.height = canvas.height * 2;
             const drawContext = canvas.getContext('2d');
-            const drawTime = [-2, 2]; // time window of drawn haps
+            const drawTime = [-2, 2];
             
             globalEditor = new StrudelMirror({
                 defaultOutput: webaudioOutput,
@@ -83,7 +81,7 @@ export default function StrudelDemo() {
                 drawTime,
                 onDraw: (haps, time) => drawPianoroll({ haps, time, ctx: drawContext, drawTime, fold: 0 }),
                 prebake: async () => {
-                    initAudioOnFirstClick(); 
+                    initAudioOnFirstClick();
                     const loadModules = evalScope(
                         import('@strudel/core'),
                         import('@strudel/draw'),
@@ -95,7 +93,6 @@ export default function StrudelDemo() {
                 },
             });
             
-            // Set initial text and process it
             setTimeout(() => {
                 setPreprocessText(stranger_tune);
                 if (globalEditor) {
