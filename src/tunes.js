@@ -58,8 +58,7 @@ note(pick(arpeggiator1, "<0 1 2 3>/2"))
 .lpenv(3.3)
 .postgain(pick(gain_patterns, pattern))
 
-<p1_Radio>
-drums:
+<p1_Radio>drums:
 stack(
   s("tech:5")
   .postgain(6)

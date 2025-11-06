@@ -25,8 +25,9 @@ export function ProcAndPlay(proc_text) {
     }
     
     if (globalEditor != null) {
-        Proc(proc_text);  
+        Proc(proc_text);  // Always preprocess
         
+        // Only restart music if it's already playing
         if (globalEditor.repl.state.started == true) {
             globalEditor.evaluate();
         }
@@ -34,21 +35,27 @@ export function ProcAndPlay(proc_text) {
 }
 
 export function Proc(proc_text) {
+    // Safety checks
     if (!proc_text || !globalEditor) {
+        console.log("Proc: text or editor not ready");
         return;
     }
 
+    console.log("Processing text...");
     let proc_text_replaced = proc_text.replaceAll('<p1_Radio>', ProcessText);
-    ProcessText(proc_text);
-    globalEditor.setCode(proc_text_replaced)
+    globalEditor.setCode(proc_text_replaced);
+    console.log("Text processed and set to editor");
 }
 
 export function ProcessText(match, ...args) {
-    let replace = ""
+    let replace = "";
     if (document.getElementById('flexRadioDefault2').checked) {
-        replace = "_"
+        replace = "//";
+        console.log("HUSH mode - returning underscore");
+    } else {
+        console.log("ON mode - returning empty string");
     }
-    return replace
+    return replace;
 }
 
 export default function StrudelDemo() {
@@ -66,7 +73,7 @@ export default function StrudelDemo() {
             canvas.width = canvas.width * 2;
             canvas.height = canvas.height * 2;
             const drawContext = canvas.getContext('2d');
-            const drawTime = [-2, 2]; 
+            const drawTime = [-2, 2]; // time window of drawn haps
             
             globalEditor = new StrudelMirror({
                 defaultOutput: webaudioOutput,
@@ -88,7 +95,7 @@ export default function StrudelDemo() {
                 },
             });
             
-            
+            // Set initial text and process it
             setTimeout(() => {
                 setPreprocessText(stranger_tune);
                 if (globalEditor) {
@@ -110,8 +117,16 @@ export default function StrudelDemo() {
                         />
                         <div className="col-md-4">
                             <AudioControls 
-                                onPlay={() => globalEditor.evaluate()}
-                                onStop={() => globalEditor.stop()}
+                                onPlay={() => {
+                                    if (globalEditor) {
+                                        globalEditor.evaluate();
+                                    }
+                                }}
+                                onStop={() => {
+                                    if (globalEditor) {
+                                        globalEditor.stop();
+                                    }
+                                }}
                                 onPreprocess={() => Proc(preprocessText)}
                                 onProcessPlay={() => {
                                     if (globalEditor != null) {
@@ -128,13 +143,17 @@ export default function StrudelDemo() {
                             <div id="output" />
                         </div>
                         <div className="col-md-4">
+                            <h5>Controls</h5>
                             <div className="form-check">
                                 <input 
                                     className="form-check-input" 
                                     type="radio" 
                                     name="flexRadioDefault" 
                                     id="flexRadioDefault1" 
-                                    onChange={() => ProcAndPlay(preprocessText)} 
+                                    onChange={() => {
+                                        console.log("ON selected");
+                                        ProcAndPlay(preprocessText);
+                                    }} 
                                     defaultChecked 
                                 />
                                 <label className="form-check-label" htmlFor="flexRadioDefault1">
@@ -147,7 +166,10 @@ export default function StrudelDemo() {
                                     type="radio" 
                                     name="flexRadioDefault" 
                                     id="flexRadioDefault2" 
-                                    onChange={() => ProcAndPlay(preprocessText)} 
+                                    onChange={() => {
+                                        console.log("HUSH selected");
+                                        ProcAndPlay(preprocessText);
+                                    }} 
                                 />
                                 <label className="form-check-label" htmlFor="flexRadioDefault2">
                                     p1: HUSH
