@@ -1,4 +1,4 @@
-import './App.css';
+import './styling/App.css';
 import React, { useEffect, useRef, useState } from "react";
 import { StrudelMirror } from '@strudel/codemirror';
 import { evalScope } from '@strudel/core';
@@ -7,11 +7,12 @@ import { initAudioOnFirstClick } from '@strudel/webaudio';
 import { transpiler } from '@strudel/transpiler';
 import { getAudioContext, webaudioOutput, registerSynthSounds } from '@strudel/webaudio';
 import { registerSoundfonts } from '@strudel/soundfonts';
-import { stranger_tune } from './Main_tunes';
+import { stranger_tune } from './utils/Main_tunes';
 import console_monkey_patch, { getD3Data } from './console-monkey-patch';
-import AudioControls from './AudioControl';
-import PreprocessingEditor from './PreProcess';
-import AdvancedControls from './AdvanceControls';
+import AudioControls from './components/Controls/AudioControl';
+import PreprocessingEditor from './components/PreProcessing/PreProcess';
+import AdvancedControls from './components/Controls/AdvanceControls';
+import AudioVisualizer from './components/Visualise/AudioVisualiser';
 
 let globalEditor = null;
 
@@ -141,8 +142,8 @@ function MusicStudioPage({
     return (
         <div className="studio-page">
             <div className="studio-header">
-                <h1>🎛️ MUSIC STUDIO</h1>
-                <p>Real-time music control and mixing</p>
+                <h1 style={{ color: 'red' }}>🎛️ MUSIC STUDIO</h1>
+                <p style = {{color: 'white' }}>Real-time music control and mixing</p>
             </div>
 
             <div className="studio-layout">
