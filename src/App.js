@@ -48,7 +48,7 @@ export function ProcAndPlay(proc_text, p2Checked, p3Checked, volume, tempo, p1Mo
     }
 }
 
-export function Proc(proc_text, p2Checked, p3Checked, volume, tempo, p1Mode) {
+export function Proc(proc_text, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol) {
     if (!proc_text || !globalEditor) {
         console.log("Proc: text or editor not ready");
         return;
@@ -59,12 +59,19 @@ export function Proc(proc_text, p2Checked, p3Checked, volume, tempo, p1Mode) {
     let processed = proc_text.replaceAll('<p1_Radio>', p1Mode === 'HUSH' ? '//' : '');
     processed = processed.replaceAll('<p2_Checkbox>', p2Checked ? '' : '//');
     processed = processed.replaceAll('<p3_Checkbox>', p3Checked ? '' : '//');
+    processed = processed.replaceAll('<p4_Checkbox>', p4Checked ? '' : '//');
+    processed = processed.replaceAll('<p5_Checkbox>', p5Checked ? '' : '//');
+    processed = processed.replaceAll('<p6_Checkbox>', p6Checked ? '' : '//');
     processed = processed.replace(/<volume_Slider>([^<]*)<\/volume_Slider>/g, volume.toString());
     processed = processed.replace(/<tempo_Number>([^<]*)<\/tempo_Number>/g, tempo.toString());
+    processed = processed.replace(/<reverb_Volume>([^<]*)<\/reverb_Volume>/g, reverbVol.toString());
+    processed = processed.replace(/<melody_Volume>([^<]*)<\/melody_Volume>/g, melodyVol.toString());
+    processed = processed.replace(/<percussion_Volume>([^<]*)<\/percussion_Volume>/g, percussionVol.toString());
     
     globalEditor.setCode(processed);
+    globalEditor.evaluate();
     console.log("Text processed and set to editor");
-    return processed; // Return the processed code
+    return processed;
 }
 
 // Navigation Component
@@ -100,24 +107,36 @@ function MusicStudioPage({
     preprocessText, 
     p1Mode, setP1Mode, 
     p2Checked, setP2Checked, 
-    p3Checked, setP3Checked, 
-    volume, setVolume, 
-    tempo, setTempo 
+    p3Checked, setP3Checked,
+    p4Checked, setP4Checked,
+    p5Checked, setP5Checked,
+    p6Checked, setP6Checked,
+    volume, setVolume,
+    reverbVol, setReverbVol,
+    melodyVol, setMelodyVol,
+    percussionVol, setPercussionVol,
+    tempo, setTempo,
+    setProcessedCode
 }) {
-    const [processedCode, setProcessedCode] = useState('');
 
     const handleProcessAndPlay = () => {
         if (globalEditor != null) {
-            const processed = Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode);
-            setProcessedCode(processed); // Update the processed code display
-            globalEditor.evaluate();
+            const processed = Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol);
+            setProcessedCode(processed);
         }
     };
 
     const handlePreprocess = () => {
-        const processed = Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode);
-        setProcessedCode(processed); // Update the processed code display
+        const processed = Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol);
+        setProcessedCode(processed);
     };
+
+    const updateAndPlay = (newP1, newP2, newP3, newP4, newP5, newP6, newVol, newTempo, newReverbVol, newMelodyVol, newPercussionVol) => {
+        const processed = Proc(preprocessText, newP2, newP3, newVol, newTempo, newP1, newP4, newP5, newP6, newReverbVol, newMelodyVol, newPercussionVol);
+        setProcessedCode(processed);
+    };
+
+    const [processedCode, setProcessedCodeLocal] = useState('');
 
     return (
         <div className="studio-page">
@@ -153,8 +172,7 @@ function MusicStudioPage({
                                             className={`toggle-btn ${p1Mode === 'ON' ? 'toggle-active' : ''}`}
                                             onClick={() => {
                                                 setP1Mode('ON');
-                                                const processed = Proc(preprocessText, p2Checked, p3Checked, volume, tempo, 'ON');
-                                                setProcessedCode(processed);
+                                                updateAndPlay('ON', p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, tempo, reverbVol, melodyVol, percussionVol);
                                             }}
                                         >
                                             🔊 ON
@@ -163,8 +181,7 @@ function MusicStudioPage({
                                             className={`toggle-btn ${p1Mode === 'HUSH' ? 'toggle-active' : ''}`}
                                             onClick={() => {
                                                 setP1Mode('HUSH');
-                                                const processed = Proc(preprocessText, p2Checked, p3Checked, volume, tempo, 'HUSH');
-                                                setProcessedCode(processed);
+                                                updateAndPlay('HUSH', p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, tempo, reverbVol, melodyVol, percussionVol);
                                             }}
                                         >
                                             🔇 MUTE
@@ -191,8 +208,7 @@ function MusicStudioPage({
                                             checked={p2Checked}
                                             onChange={(e) => {
                                                 setP2Checked(e.target.checked);
-                                                const processed = Proc(preprocessText, e.target.checked, p3Checked, volume, tempo, p1Mode);
-                                                setProcessedCode(processed);
+                                                updateAndPlay(p1Mode, e.target.checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, tempo, reverbVol, melodyVol, percussionVol);
                                             }}
                                         />
                                         <span className="slider"></span>
@@ -218,12 +234,134 @@ function MusicStudioPage({
                                             checked={p3Checked}
                                             onChange={(e) => {
                                                 setP3Checked(e.target.checked);
-                                                const processed = Proc(preprocessText, p2Checked, e.target.checked, volume, tempo, p1Mode);
-                                                setProcessedCode(processed);
+                                                updateAndPlay(p1Mode, p2Checked, e.target.checked, p4Checked, p5Checked, p6Checked, volume, tempo, reverbVol, melodyVol, percussionVol);
                                             }}
                                         />
                                         <span className="slider"></span>
                                     </label>
+                                </div>
+                            </div>
+
+                            {/* Reverb Channel */}
+                            <div className="mixer-channel">
+                                <div className="channel-header">
+                                    <div className="channel-info">
+                                        <span className="channel-icon">🌊</span>
+                                        <span className="channel-name">REVERB</span>
+                                    </div>
+                                    <div className={`channel-status ${p4Checked ? 'status-active' : 'status-muted'}`}>
+                                        {p4Checked ? 'ACTIVE' : 'MUTED'}
+                                    </div>
+                                </div>
+                                <div className="channel-controls">
+                                    <label className="switch">
+                                        <input 
+                                            type="checkbox"
+                                            checked={p4Checked}
+                                            onChange={(e) => {
+                                                setP4Checked(e.target.checked);
+                                                updateAndPlay(p1Mode, p2Checked, p3Checked, e.target.checked, p5Checked, p6Checked, volume, tempo, reverbVol, melodyVol, percussionVol);
+                                            }}
+                                        />
+                                        <span className="slider"></span>
+                                    </label>
+                                    <div className="volume-control">
+                                        <input 
+                                            type="range" 
+                                            min="0"
+                                            max="1"
+                                            step="0.1"
+                                            value={reverbVol}
+                                            onChange={(e) => {
+                                                setReverbVol(parseFloat(e.target.value));
+                                                updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, tempo, parseFloat(e.target.value), melodyVol, percussionVol);
+                                            }}
+                                            className="volume-slider-small"
+                                        />
+                                        <span className="volume-value">{reverbVol.toFixed(1)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Melody Channel */}
+                            <div className="mixer-channel">
+                                <div className="channel-header">
+                                    <div className="channel-info">
+                                        <span className="channel-icon">🎼</span>
+                                        <span className="channel-name">MELODY</span>
+                                    </div>
+                                    <div className={`channel-status ${p5Checked ? 'status-active' : 'status-muted'}`}>
+                                        {p5Checked ? 'ACTIVE' : 'MUTED'}
+                                    </div>
+                                </div>
+                                <div className="channel-controls">
+                                    <label className="switch">
+                                        <input 
+                                            type="checkbox"
+                                            checked={p5Checked}
+                                            onChange={(e) => {
+                                                setP5Checked(e.target.checked);
+                                                updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, e.target.checked, p6Checked, volume, tempo, reverbVol, melodyVol, percussionVol);
+                                            }}
+                                        />
+                                        <span className="slider"></span>
+                                    </label>
+                                    <div className="volume-control">
+                                        <input 
+                                            type="range" 
+                                            min="0"
+                                            max="2"
+                                            step="0.1"
+                                            value={melodyVol}
+                                            onChange={(e) => {
+                                                setMelodyVol(parseFloat(e.target.value));
+                                                updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, tempo, reverbVol, parseFloat(e.target.value), percussionVol);
+                                            }}
+                                            className="volume-slider-small"
+                                        />
+                                        <span className="volume-value">{melodyVol.toFixed(1)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Percussion Channel */}
+                            <div className="mixer-channel">
+                                <div className="channel-header">
+                                    <div className="channel-info">
+                                        <span className="channel-icon">🥊</span>
+                                        <span className="channel-name">PERCUSSION</span>
+                                    </div>
+                                    <div className={`channel-status ${p6Checked ? 'status-active' : 'status-muted'}`}>
+                                        {p6Checked ? 'ACTIVE' : 'MUTED'}
+                                    </div>
+                                </div>
+                                <div className="channel-controls">
+                                    <label className="switch">
+                                        <input 
+                                            type="checkbox"
+                                            checked={p6Checked}
+                                            onChange={(e) => {
+                                                setP6Checked(e.target.checked);
+                                                updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, e.target.checked, volume, tempo, reverbVol, melodyVol, percussionVol);
+                                            }}
+                                        />
+                                        <span className="slider"></span>
+                                    </label>
+                                    <div className="volume-control">
+                                        <input 
+                                            type="range" 
+                                            min="0"
+                                            max="1"
+                                            step="0.1"
+                                            value={percussionVol}
+                                            onChange={(e) => {
+                                                setPercussionVol(parseFloat(e.target.value));
+                                                updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, tempo, reverbVol, melodyVol, parseFloat(e.target.value));
+                                            }}
+                                            className="volume-slider-small"
+                                        />
+                                        <span className="volume-value">{percussionVol.toFixed(1)}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -238,26 +376,22 @@ function MusicStudioPage({
                             p2Checked={p2Checked}
                             onP2Change={(checked) => {
                                 setP2Checked(checked);
-                                const processed = Proc(preprocessText, checked, p3Checked, volume, tempo, p1Mode);
-                                setProcessedCode(processed);
+                                updateAndPlay(p1Mode, checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, tempo, reverbVol, melodyVol, percussionVol);
                             }}
                             p3Checked={p3Checked}
                             onP3Change={(checked) => {
                                 setP3Checked(checked);
-                                const processed = Proc(preprocessText, p2Checked, checked, volume, tempo, p1Mode);
-                                setProcessedCode(processed);
+                                updateAndPlay(p1Mode, p2Checked, checked, p4Checked, p5Checked, p6Checked, volume, tempo, reverbVol, melodyVol, percussionVol);
                             }}
                             volume={volume}
                             onVolumeChange={(newVolume) => {
                                 setVolume(newVolume);
-                                const processed = Proc(preprocessText, p2Checked, p3Checked, newVolume, tempo, p1Mode);
-                                setProcessedCode(processed);
+                                updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, newVolume, tempo, reverbVol, melodyVol, percussionVol);
                             }}
                             tempo={tempo}
                             onTempoChange={(newTempo) => {
                                 setTempo(newTempo);
-                                const processed = Proc(preprocessText, p2Checked, p3Checked, volume, newTempo, p1Mode);
-                                setProcessedCode(processed);
+                                updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, newTempo, reverbVol, melodyVol, percussionVol);
                             }}
                         />
                     </div>
@@ -313,8 +447,14 @@ function CodeEditorPage({
     setPreprocessText, 
     p1Mode, setP1Mode, 
     p2Checked, setP2Checked, 
-    p3Checked, setP3Checked, 
-    volume, setVolume, 
+    p3Checked, setP3Checked,
+    p4Checked, setP4Checked,
+    p5Checked, setP5Checked,
+    p6Checked, setP6Checked,
+    volume, setVolume,
+    reverbVol, setReverbVol,
+    melodyVol, setMelodyVol,
+    percussionVol, setPercussionVol,
     tempo, setTempo 
 }) {
     return (
@@ -333,7 +473,7 @@ function CodeEditorPage({
                                 className="action-btn primary"
                                 onClick={() => {
                                     if (globalEditor != null) {
-                                        Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode);
+                                        Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol);
                                         globalEditor.evaluate();
                                     }
                                 }}
@@ -397,6 +537,42 @@ function CodeEditorPage({
                         </div>
 
                         <div className="control-group">
+                            <label>🌊 Reverb</label>
+                            <label className="switch small">
+                                <input 
+                                    type="checkbox"
+                                    checked={p4Checked}
+                                    onChange={(e) => setP4Checked(e.target.checked)}
+                                />
+                                <span className="slider"></span>
+                            </label>
+                        </div>
+
+                        <div className="control-group">
+                            <label>🎼 Melody</label>
+                            <label className="switch small">
+                                <input 
+                                    type="checkbox"
+                                    checked={p5Checked}
+                                    onChange={(e) => setP5Checked(e.target.checked)}
+                                />
+                                <span className="slider"></span>
+                            </label>
+                        </div>
+
+                        <div className="control-group">
+                            <label>🥊 Percussion</label>
+                            <label className="switch small">
+                                <input 
+                                    type="checkbox"
+                                    checked={p6Checked}
+                                    onChange={(e) => setP6Checked(e.target.checked)}
+                                />
+                                <span className="slider"></span>
+                            </label>
+                        </div>
+
+                        <div className="control-group">
                             <label>🔊 Volume: {volume}</label>
                             <input 
                                 type="range" 
@@ -423,7 +599,7 @@ function CodeEditorPage({
                             className="action-btn secondary full-width"
                             onClick={() => {
                                 if (globalEditor != null) {
-                                    Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode);
+                                    Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol);
                                     globalEditor.evaluate();
                                 }
                             }}
@@ -444,8 +620,15 @@ export default function StrudelDemo() {
     const [p1Mode, setP1Mode] = useState('ON');
     const [p2Checked, setP2Checked] = useState(true);
     const [p3Checked, setP3Checked] = useState(true);
+    const [p4Checked, setP4Checked] = useState(true);
+    const [p5Checked, setP5Checked] = useState(true);
+    const [p6Checked, setP6Checked] = useState(true);
     const [volume, setVolume] = useState(2);
+    const [reverbVol, setReverbVol] = useState(0.3);
+    const [melodyVol, setMelodyVol] = useState(1);
+    const [percussionVol, setPercussionVol] = useState(0.5);
     const [tempo, setTempo] = useState(140);
+    const [processedCode, setProcessedCode] = useState('');
 
     useEffect(() => {
         if (!hasRun.current) {
@@ -482,7 +665,18 @@ export default function StrudelDemo() {
             setTimeout(() => {
                 setPreprocessText(stranger_tune);
                 if (globalEditor) {
-                    Proc(stranger_tune, true, true, 2, 140, 'ON');
+                    let processed = stranger_tune.replaceAll('<p1_Radio>', '');
+                    processed = processed.replaceAll('<p2_Checkbox>', '');
+                    processed = processed.replaceAll('<p3_Checkbox>', '');
+                    processed = processed.replaceAll('<p4_Checkbox>', '');
+                    processed = processed.replaceAll('<p5_Checkbox>', '');
+                    processed = processed.replaceAll('<p6_Checkbox>', '');
+                    processed = processed.replace(/<volume_Slider>([^<]*)<\/volume_Slider>/g, '2');
+                    processed = processed.replace(/<tempo_Number>([^<]*)<\/tempo_Number>/g, '140');
+                    processed = processed.replace(/<reverb_Volume>([^<]*)<\/reverb_Volume>/g, '0.3');
+                    processed = processed.replace(/<melody_Volume>([^<]*)<\/melody_Volume>/g, '1');
+                    processed = processed.replace(/<percussion_Volume>([^<]*)<\/percussion_Volume>/g, '0.5');
+                    globalEditor.setCode(processed);
                 }
             }, 100);
         }
@@ -502,10 +696,23 @@ export default function StrudelDemo() {
                         setP2Checked={setP2Checked}
                         p3Checked={p3Checked}
                         setP3Checked={setP3Checked}
+                        p4Checked={p4Checked}
+                        setP4Checked={setP4Checked}
+                        p5Checked={p5Checked}
+                        setP5Checked={setP5Checked}
+                        p6Checked={p6Checked}
+                        setP6Checked={setP6Checked}
                         volume={volume}
                         setVolume={setVolume}
+                        reverbVol={reverbVol}
+                        setReverbVol={setReverbVol}
+                        melodyVol={melodyVol}
+                        setMelodyVol={setMelodyVol}
+                        percussionVol={percussionVol}
+                        setPercussionVol={setPercussionVol}
                         tempo={tempo}
                         setTempo={setTempo}
+                        setProcessedCode={setProcessedCode}
                     />
                 )}
                 
@@ -519,8 +726,20 @@ export default function StrudelDemo() {
                         setP2Checked={setP2Checked}
                         p3Checked={p3Checked}
                         setP3Checked={setP3Checked}
+                        p4Checked={p4Checked}
+                        setP4Checked={setP4Checked}
+                        p5Checked={p5Checked}
+                        setP5Checked={setP5Checked}
+                        p6Checked={p6Checked}
+                        setP6Checked={setP6Checked}
                         volume={volume}
                         setVolume={setVolume}
+                        reverbVol={reverbVol}
+                        setReverbVol={setReverbVol}
+                        melodyVol={melodyVol}
+                        setMelodyVol={setMelodyVol}
+                        percussionVol={percussionVol}
+                        setPercussionVol={setPercussionVol}
                         tempo={tempo}
                         setTempo={setTempo}
                     />

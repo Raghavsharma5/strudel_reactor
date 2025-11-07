@@ -35,7 +35,6 @@ const arpeggiator2 = [
 "{d5 bb4 g4 d4 bb3 g3 d4 bb3 eb3 d3 bb2 eb2}%16",
 ]
 
-
 const pattern = 0
 const bass = 0
 
@@ -49,13 +48,14 @@ note(pick(basslines, bass))
 .postgain(pick(gain_patterns, pattern))
 
 
-main_arp: 
+<p5_Checkbox>main_arp: 
 note(pick(arpeggiator1, "<0 1 2 3>/2"))
 .sound("supersaw")
 .lpf(300)
 .adsr("0:0:.5:.1")
 .room(0.6)
 .lpenv(3.3)
+.postgain(<melody_Volume>1</melody_Volume>)
 .postgain(pick(gain_patterns, pattern))
 
 <p1_Radio>drums:
@@ -76,6 +76,12 @@ stack(
   .postgain(.25),
 )
 
+<p6_Checkbox>percussion:
+stack(
+  s("perc").struct("[x ~ x ~]*2").bank("RolandTR808").gain(<percussion_Volume>0.5</percussion_Volume>),
+  s("tom").struct("x*8").speed(0.9).room(0.3).gain(<percussion_Volume>0.5</percussion_Volume>),
+)
+
 <p3_Checkbox>drums2: 
 stack(
   s("[~ hh]*4").bank("RolandTR808").room(0.3).speed(0.75).gain(1.2),
@@ -92,6 +98,13 @@ stack(
   .speed(0.5)
   .rarely(jux(rev)),
 )
+
+<p4_Checkbox>reverb_effect:
+s("tech").struct("[~ x ~ x]")
+.room(0.9)
+.delay(0.5)
+.gain(<reverb_Volume>0.3</reverb_Volume>)
+
 //Remixed and reproduced from Algorave Dave's code found here: https://www.youtube.com/watch?v=ZCcpWzhekEY
 // all(x => x.gain(mouseX.range(0,1)))
 // all(x => x.log())
