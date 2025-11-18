@@ -1,0 +1,221 @@
+/* Modal Overlay */
+.visualizer-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Modal Content */
+.visualizer-modal-content {
+    background: linear-gradient(135deg, #1e1e2e, #0a0a0f);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 212, 255, 0.4);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { 
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to { 
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Modal Header */
+.visualizer-modal-header {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(168, 85, 247, 0.05));
+    border-bottom: 2px solid var(--accent);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.visualizer-modal-header h2 {
+    color: #00d4ff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 2px;
+}
+
+.modal-close-btn {
+    background: transparent;
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close-btn:hover {
+    background: var(--accent);
+    color: var(--primary-bg);
+    transform: rotate(90deg);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.6);
+}
+
+/* Modal Body */
+.visualizer-modal-body {
+    padding: 2rem;
+    max-height: calc(90vh - 200px);
+    overflow-y: auto;
+}
+
+/* Make visualizer bigger in modal */
+.visualizer-modal-body .waveform-svg,
+.visualizer-modal-body .meter-svg {
+    width: 100% !important;
+    height: auto !important;
+}
+
+.visualizer-modal-body .visualizer-section {
+    margin-bottom: 2rem;
+}
+
+/* Modal Footer */
+.visualizer-modal-footer {
+    background: rgba(0, 0, 0, 0.3);
+    border-top: 1px solid var(--border);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.modal-action-btn {
+    background: linear-gradient(135deg, var(--accent), #00ff88);
+    color: var(--primary-bg);
+    border: none;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.modal-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+}
+
+/* Scrollbar for modal */
+.visualizer-modal-body::-webkit-scrollbar {
+    width: 8px;
+}
+
+.visualizer-modal-body::-webkit-scrollbar-track {
+    background: rgba(0, 212, 255, 0.05);
+}
+
+.visualizer-modal-body::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+}
+/* Enhanced visualizer content */
+.visualizer-content-enhanced {
+    padding: 1.5rem;
+}
+
+.visualizer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+}
+
+.visualizer-section-large {
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.visualizer-section-large h3 {
+    color: #00d4ff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    letter-spacing: 1px;
+}
+
+.waveform-svg-large,
+.meter-svg-large,
+.spectrum-svg-large {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+/* Stats Panel */
+.stats-panel {
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(168, 85, 247, 0.05));
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.stats-panel h3 {
+    color: #00d4ff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    letter-spacing: 1px;
+}
+
+.stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem 0;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.stat-row:last-child {
+    border-bottom: none;
+}
+
+.stat-label {
+    color: #8888cc;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.stat-value {
+    color: #00ff88;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.stat-value.peak {
+    color: #ffaa00;
+}
