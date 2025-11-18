@@ -1,112 +1,63 @@
 export const stranger_tune = `setcps(<tempo_Number>140</tempo_Number>/60/4)
-
 samples('github:algorave-dave/samples')
 samples('https://raw.githubusercontent.com/tidalcycles/Dirt-Samples/master/strudel.json')
 samples('https://raw.githubusercontent.com/Mittans/tidal-drum-machines/main/machines/tidal-drum-machines.json')
 
-const gain_patterns = [
-  "2",
-  "{0.75 2.5}*4",
-    "{0.75 2.5!9 0.75 2.5!5 0.75 2.5 0.75 2.5!7 0.75 2.5!3 <2.5 0.75> 2.5}%16",
-]
-
-const drum_structure = [
-"~",
-"x*4",
-"{x ~!9 x ~!5 x ~ x ~!7 x ~!3 < ~ x > ~}%16",
-]
-
-const basslines = [
-  "[[eb1, eb2]!16 [f2, f1]!16 [g2, g1]!16 [f2, f1]!8 [bb2, bb1]!8]/8",
-  "[[eb1, eb2]!16 [bb2, bb1]!16 [g2, g1]!16 [f2, f1]!4 [bb1, bb2]!4 [eb1, eb2]!4 [f1, f2]!4]/8"
-]
-
-const arpeggiator1 = [
-"{d4 bb3 eb3 d3 bb2 eb2}%16",
-"{c4 bb3 f3 c3 bb2 f2}%16",
-"{d4 bb3 g3 d3 bb2 g2}%16",
-"{c4 bb3 f3 c3 bb2 f2}%16",
-]
-
-const arpeggiator2 = [
-"{d4 bb3 eb3 d3 bb2 eb2}%16",
-"{c4 bb3 f3 c3 bb2 f2}%16",
-"{d4 bb3 g3 d3 bb2 g2}%16",
-"{d5 bb4 g4 d4 bb3 g3 d4 bb3 eb3 d3 bb2 eb2}%16",
-]
-
-const pattern = 0
-const bass = 0
-
-<p2_Checkbox>bassline:
-note(pick(basslines, bass))
-.sound("supersaw")
-.postgain(<volume_Slider>2</volume_Slider>)  
-.room(0.6)
-.lpf(700)
-.room(0.4)
-.postgain(pick(gain_patterns, pattern))
-
-
-<p5_Checkbox>main_arp: 
-note(pick(arpeggiator1, "<0 1 2 3>/2"))
-.sound("supersaw")
-.lpf(300)
-.adsr("0:0:.5:.1")
-.room(0.6)
-.lpenv(3.3)
-.postgain(<melody_Volume>1</melody_Volume>)
-.postgain(pick(gain_patterns, pattern))
-
+// High Energy EDM BEAT.
 <p1_Radio>drums:
 stack(
-  s("tech:5")
-  .postgain(6)
-  .pcurve(2)
-  .pdec(1)
-  .struct(pick(drum_structure, pattern)),
+  s("bd:3").struct("[x ~ ~ ~]*2")
+    .gain(1.2).speed(0.95).room(0.2),
+  s("sd:5").struct("~ x ~ x")
+    .gain(0.9).speed(1.1).room(0.3),
+  s("tech:8").struct("x*8")
+    .gain(0.4).speed(0.8).lpf(3000)
+)
 
-  s("sh").struct("[x!3 ~!2 x!10 ~]")
-  .postgain(0.5).lpf(7000)
-  .bank("RolandTR808")
-  .speed(0.8).jux(rev).room(sine.range(0.1,0.4)).gain(0.6),
+<p3_Checkbox>hihats:
+stack(
+  s("hh:2").struct("x*16")
+    .gain("0.6 0.4!3").bank("RolandTR808")
+    .speed(0.9).room(0.2),
+  s("hh:4").struct("[~ x]*8")
+    .gain(0.5).speed(1.2).hpf(8000)
+)
 
-  s("{~ ~ rim ~ cp ~ rim cp ~!2 rim ~ cp ~ < rim ~ >!2}%8 *2")
-  .bank("[KorgDDM110, OberheimDmx]").speed(1.2)
-  .postgain(.25),
-).log()
+<p2_Checkbox>bassline:
+note("[[c2 ~!3]*4, [c2 eb2 f2 g2]/8]")
+  .sound("sawtooth")
+  .postgain(<volume_Slider>2</volume_Slider>)
+  .lpf(sine.range(300, 800).slow(4))
+  .lpenv(2.5)
+  .room(0.3)
+
+<p5_Checkbox>melody:
+stack(
+  note("<[c4 eb4 g4 bb4]*4 [f4 ab4 c5 eb5]*4>")
+    .sound("square")
+    .lpf(2000)
+    .adsr("0:.05:.3:.2")
+    .gain(<melody_Volume>1</melody_Volume>)
+    .room(0.6),
+  note("<c5 eb5 g5 bb5>")
+    .sound("triangle")
+    .gain(0.6)
+    .delay(0.25)
+    .delaytime(0.125)
+)
 
 <p6_Checkbox>percussion:
-stack(
-  s("perc").struct("[x ~ x ~]*2").bank("RolandTR808").gain(<percussion_Volume>0.5</percussion_Volume>),
-  s("tom").struct("x*8").speed(0.9).room(0.3).gain(<percussion_Volume>0.5</percussion_Volume>),
-)
+s("cp:2, rim:1").struct("[x ~!3 x ~!3]*2")
+  .bank("RolandTR808")
+  .gain(<percussion_Volume>0.5</percussion_Volume>)
+  .speed("0.9 1.1")
+  .room(0.4)
 
-<p3_Checkbox>drums2: 
-stack(
-  s("[~ hh]*4").bank("RolandTR808").room(0.3).speed(0.75).gain(1.2),
-  s("hh").struct("x*16").bank("RolandTR808")
-  .gain(0.6)
-  .jux(rev)
-  .room(sine.range(0.1,0.4))
-  .postgain(0.5),
-  
-  s("[psr:[2|5|6|7|8|9|12|24|25]*16]?0.1")
-  .gain(0.1)
-  .postgain(pick(gain_patterns, pattern))
-  .hpf(1000)
+<p4_Checkbox>reverb_fx:
+s("tech:12").struct("[~ ~ x ~]*2")
+  .room(0.9)
+  .delay(0.5)
+  .gain(<reverb_Volume>0.3</reverb_Volume>)
   .speed(0.5)
-  .rarely(jux(rev)),
-)
 
-<p4_Checkbox>reverb_effect:
-s("tech").struct("[~ x ~ x]")
-.room(0.9)
-.delay(0.5)
-.gain(<reverb_Volume>0.3</reverb_Volume>)
-
-//Remixed and reproduced from Algorave Dave's code found here: https://www.youtube.com/watch?v=ZCcpWzhekEY
-// all(x => x.gain(mouseX.range(0,1)))
-// all(x => x.log())
-
-// @version 1.2`;
+// @version CYBER PULSE v1.0`;

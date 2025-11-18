@@ -17,10 +17,84 @@ import { saveSettings, loadSettings } from './utils/SettingsManager';
 import VisualizerModal from './components/Visualise/VisualizerModal';
 
 let globalEditor = null;
+let masterGainNode = null;
+let volumeInitialized = false;
 
 const handleD3Data = (event) => {
     console.log(event.detail);
 };
+
+export function InitializeVolumeControl() {
+    if (volumeInitialized) return;
+    
+    try {
+        const audioContext = getAudioContext();
+        if (!audioContext) {
+            console.log("⏳ Audio context not ready yet");
+            return;
+        }
+
+        // Create master gain node
+        masterGainNode = audioContext.createGain();
+        masterGainNode.gain.value = 0.4; // Initial volume (2/5 = 0.4)
+        
+        const originalDestination = audioContext.destination;
+        
+        // Connect our gain to the real destination
+        masterGainNode.connect(originalDestination);
+        
+        
+        volumeInitialized = true;
+        console.log("✅ Volume control initialized!");
+        
+    } catch (err) {
+        console.error("❌ Failed to initialize volume:", err);
+    }
+}
+
+// Real-time volume update
+export function UpdateGlobalVolume(volumeLevel) {
+    console.log(`🔊 UpdateGlobalVolume called with: ${volumeLevel}`);
+    
+    // Try to initialize if not done yet
+    if (!volumeInitialized) {
+        InitializeVolumeControl();
+    }
+    
+    try {
+        const audioContext = getAudioContext();
+        
+        if (!audioContext) {
+            console.log("⚠️ Audio context not available");
+            return false;
+        }
+
+        if (!masterGainNode) {
+            // Create it now if it doesn't exist
+            masterGainNode = audioContext.createGain();
+            masterGainNode.connect(audioContext.destination);
+            volumeInitialized = true;
+            console.log("✅ Created gain node on-the-fly");
+        }
+
+        // Update the gain value
+        const gainValue = volumeLevel / 5; // Normalize 0-5 to 0-1
+        masterGainNode.gain.setValueAtTime(gainValue, audioContext.currentTime);
+        
+        console.log(`✅ Volume updated to ${volumeLevel} (gain: ${gainValue.toFixed(2)})`);
+        
+        
+        if (globalEditor && globalEditor.repl && globalEditor.repl.state.started) {
+            console.log("♻️ Re-evaluating code to apply volume");
+        }
+        
+        return true;
+        
+    } catch (err) {
+        console.error("❌ Error in UpdateGlobalVolume:", err);
+        return false;
+    }
+}
 
 function ProcessedCodeDisplay({ code }) {
     return (
@@ -51,16 +125,14 @@ export function ProcAndPlay(proc_text, p2Checked, p3Checked, volume, tempo, p1Mo
     }
 }
 
-// Main processing function that handles text substitution and code execution
 export function Proc(proc_text, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol) {
     if (!proc_text || !globalEditor) {
         console.log("Proc: text or editor not ready");
         return;
     }
 
-    console.log("Processing text...");
+    console.log("Processing text with volume:", volume);
     
-    // Replace placeholders with actual values based on control states
     let processed = proc_text.replaceAll('<p1_Radio>', p1Mode === 'HUSH' ? '//' : '');
     processed = processed.replaceAll('<p2_Checkbox>', p2Checked ? '' : '//');
     processed = processed.replaceAll('<p3_Checkbox>', p3Checked ? '' : '//');
@@ -75,7 +147,11 @@ export function Proc(proc_text, p2Checked, p3Checked, volume, tempo, p1Mode, p4C
     
     globalEditor.setCode(processed);
     globalEditor.evaluate();
-    console.log("Text processed and set to editor");
+    
+    // Apply volume via gain node
+    UpdateGlobalVolume(volume);
+    
+    console.log("✅ Text processed and volume applied");
     return processed;
 }
 
@@ -129,6 +205,9 @@ function MusicStudioPage({
 
     const handleProcessAndPlay = () => {
         if (globalEditor != null) {
+            // Initialize volume control when first playing
+            InitializeVolumeControl();
+            
             const processed = Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol);
             setProcessedCode(processed);
             setIsPlaying(true);
@@ -140,7 +219,6 @@ function MusicStudioPage({
         setProcessedCode(processed);
     };
 
-    // Update and re-evaluate when controls change during playback
     const updateAndPlay = (newP1, newP2, newP3, newP4, newP5, newP6, newVol, newTempo, newReverbVol, newMelodyVol, newPercussionVol) => {
         const processed = Proc(preprocessText, newP2, newP3, newVol, newTempo, newP1, newP4, newP5, newP6, newReverbVol, newMelodyVol, newPercussionVol);
         setProcessedCode(processed);
@@ -156,7 +234,7 @@ function MusicStudioPage({
         <div className="studio-page">
             <div className="studio-header">
                 <h1>🎛️ MUSIC STUDIO</h1>
-                <p style = {{color: 'white' }}>Real-time music control and mixing</p>
+                <p style={{color: 'white'}}>Real-time music control and mixing</p>
             </div>
 
             <div className="studio-layout">
@@ -380,7 +458,7 @@ function MusicStudioPage({
                         </div>
                     </div>
 
-                    {/* Global Settings Card */}
+                    {/* Global Settings */}
                     <div className="settings-card">
                         <div className="card-header">
                             <h2>⚙️ GLOBAL SETTINGS</h2>
@@ -398,27 +476,32 @@ function MusicStudioPage({
                             }}
                             volume={volume}
                             onVolumeChange={(newVolume) => {
+                                console.log(`📢 Volume slider moved to: ${newVolume}`);
                                 setVolume(newVolume);
-                                updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, newVolume, tempo, reverbVol, melodyVol, percussionVol);
+                                UpdateGlobalVolume(newVolume);
                             }}
                             tempo={tempo}
                             onTempoChange={(newTempo) => {
                                 setTempo(newTempo);
-                                updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, newTempo, reverbVol, melodyVol, percussionVol);
+                                if (globalEditor && globalEditor.repl.state.started === true) {
+                                    updateAndPlay(p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, p6Checked, volume, newTempo, reverbVol, melodyVol, percussionVol);
+                                }
                             }}
                         />
                     </div>
                 </div>
 
-                {/* Right Column - Transport & Output */}
+                {/* Right Column */}
                 <div className="control-column">
                     <div className="transport-card">
                         <div className="card-header">
                             <h2>🎛️ TRANSPORT</h2>
                         </div>
+                        
                         <AudioControls 
                             onPlay={() => {
                                 if (globalEditor) {
+                                    InitializeVolumeControl();
                                     globalEditor.evaluate();
                                     setIsPlaying(true);
                                 }
@@ -437,7 +520,6 @@ function MusicStudioPage({
                         />
                     </div>
 
-                    {/* Live Output Display */}
                     <div className="output-card">
                         <div className="card-header">
                             <h2>📊 LIVE OUTPUT</h2>
@@ -445,7 +527,6 @@ function MusicStudioPage({
                         <div id="editor" className="output-display" />
                     </div>
 
-                    {/* Processed Code Display */}
                     <div className="output-card">
                         <div className="card-header">
                             <h2>🔧 PROCESSED CODE</h2>
@@ -483,7 +564,6 @@ function CodeEditorPage({
             </div>
 
             <div className="code-single-column">
-                {/* Code Editor Card */}
                 <div className="editor-card-full">
                     <div className="card-header">
                         <h2>🎹 LIVE CODE EDITOR</h2>
@@ -513,7 +593,6 @@ function CodeEditorPage({
                     />
                 </div>
 
-                {/* Visualizer Section */}
                 <div className="code-visualizer-section">
                     <div className="visualizer-header">
                         <div className="visualizer-title">
@@ -599,14 +678,12 @@ export default function StrudelDemo() {
             console_monkey_patch();
             hasRun.current = true;
             
-            // Setup piano roll canvas
             const canvas = document.getElementById('roll');
             canvas.width = canvas.width * 2;
             canvas.height = canvas.height * 2;
             const drawContext = canvas.getContext('2d');
             const drawTime = [-2, 2];
             
-            // Initialize Strudel editor
             globalEditor = new StrudelMirror({
                 defaultOutput: webaudioOutput,
                 getTime: () => getAudioContext().currentTime,
@@ -627,7 +704,6 @@ export default function StrudelDemo() {
                 },
             });
             
-            // Load default tune after a brief delay
             setTimeout(() => {
                 setPreprocessText(stranger_tune);
                 if (globalEditor) {
@@ -692,27 +768,16 @@ export default function StrudelDemo() {
                         preprocessText={preprocessText}
                         setPreprocessText={setPreprocessText}
                         p1Mode={p1Mode}
-                        setP1Mode={setP1Mode}
                         p2Checked={p2Checked}
-                        setP2Checked={setP2Checked}
                         p3Checked={p3Checked}
-                        setP3Checked={setP3Checked}
                         p4Checked={p4Checked}
-                        setP4Checked={setP4Checked}
                         p5Checked={p5Checked}
-                        setP5Checked={setP5Checked}
                         p6Checked={p6Checked}
-                        setP6Checked={setP6Checked}
                         volume={volume}
-                        setVolume={setVolume}
                         reverbVol={reverbVol}
-                        setReverbVol={setReverbVol}
                         melodyVol={melodyVol}
-                        setMelodyVol={setMelodyVol}
                         percussionVol={percussionVol}
-                        setPercussionVol={setPercussionVol}
                         tempo={tempo}
-                        setTempo={setTempo}
                         isPlaying={isPlaying}                           
                         onOpenVisualizer={() => setIsVisualizerOpen(true)}
                     />
