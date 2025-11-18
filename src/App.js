@@ -13,6 +13,8 @@ import AudioControls from './components/Controls/AudioControl';
 import PreprocessingEditor from './components/PreProcessing/PreProcess';
 import AdvancedControls from './components/Controls/AdvanceControls';
 import AudioVisualizer from './components/Visualise/AudioVisualiser';
+import { saveSettings, loadSettings } from './utils/SettingsManager';
+import VisualizerModal from './components/Visualise/VisualizerModal';
 
 let globalEditor = null;
 
@@ -49,6 +51,7 @@ export function ProcAndPlay(proc_text, p2Checked, p3Checked, volume, tempo, p1Mo
     }
 }
 
+// Main processing function that handles text substitution and code execution
 export function Proc(proc_text, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol) {
     if (!proc_text || !globalEditor) {
         console.log("Proc: text or editor not ready");
@@ -57,6 +60,7 @@ export function Proc(proc_text, p2Checked, p3Checked, volume, tempo, p1Mode, p4C
 
     console.log("Processing text...");
     
+    // Replace placeholders with actual values based on control states
     let processed = proc_text.replaceAll('<p1_Radio>', p1Mode === 'HUSH' ? '//' : '');
     processed = processed.replaceAll('<p2_Checkbox>', p2Checked ? '' : '//');
     processed = processed.replaceAll('<p3_Checkbox>', p3Checked ? '' : '//');
@@ -75,7 +79,6 @@ export function Proc(proc_text, p2Checked, p3Checked, volume, tempo, p1Mode, p4C
     return processed;
 }
 
-// Navigation Component
 function Navigation({ currentPage, setCurrentPage }) {
     return (
         <nav className="app-navbar">
@@ -103,7 +106,6 @@ function Navigation({ currentPage, setCurrentPage }) {
     );
 }
 
-// Music Studio Page - All controls and mixer
 function MusicStudioPage({ 
     preprocessText, 
     p1Mode, setP1Mode, 
@@ -117,13 +119,19 @@ function MusicStudioPage({
     melodyVol, setMelodyVol,
     percussionVol, setPercussionVol,
     tempo, setTempo,
-    setProcessedCode
+    setProcessedCode,
+    handleSaveSettings,    
+    handleLoadSettings,
+    onOpenVisualizer,
+    isPlaying,
+    setIsPlaying
 }) {
 
     const handleProcessAndPlay = () => {
         if (globalEditor != null) {
             const processed = Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol);
             setProcessedCode(processed);
+            setIsPlaying(true);
         }
     };
 
@@ -132,9 +140,14 @@ function MusicStudioPage({
         setProcessedCode(processed);
     };
 
+    // Update and re-evaluate when controls change during playback
     const updateAndPlay = (newP1, newP2, newP3, newP4, newP5, newP6, newVol, newTempo, newReverbVol, newMelodyVol, newPercussionVol) => {
         const processed = Proc(preprocessText, newP2, newP3, newVol, newTempo, newP1, newP4, newP5, newP6, newReverbVol, newMelodyVol, newPercussionVol);
         setProcessedCode(processed);
+        
+        if (globalEditor && globalEditor.repl.state.started === true) {
+            globalEditor.evaluate();
+        }
     };
 
     const [processedCode, setProcessedCodeLocal] = useState('');
@@ -142,12 +155,11 @@ function MusicStudioPage({
     return (
         <div className="studio-page">
             <div className="studio-header">
-                <h1 style={{ color: 'red' }}>🎛️ MUSIC STUDIO</h1>
+                <h1>🎛️ MUSIC STUDIO</h1>
                 <p style = {{color: 'white' }}>Real-time music control and mixing</p>
             </div>
 
             <div className="studio-layout">
-                {/* Left Column - Mixer */}
                 <div className="mixer-column">
                     <div className="mixer-card">
                         <div className="card-header">
@@ -156,7 +168,7 @@ function MusicStudioPage({
                         </div>
                         
                         <div className="mixer-channels">
-                            {/* Drum Channel */}
+                            {/* Drum Kit Channel */}
                             <div className="mixer-channel">
                                 <div className="channel-header">
                                     <div className="channel-info">
@@ -368,7 +380,7 @@ function MusicStudioPage({
                         </div>
                     </div>
 
-                    {/* Global Settings */}
+                    {/* Global Settings Card */}
                     <div className="settings-card">
                         <div className="card-header">
                             <h2>⚙️ GLOBAL SETTINGS</h2>
@@ -400,7 +412,6 @@ function MusicStudioPage({
 
                 {/* Right Column - Transport & Output */}
                 <div className="control-column">
-                    {/* Transport Controls */}
                     <div className="transport-card">
                         <div className="card-header">
                             <h2>🎛️ TRANSPORT</h2>
@@ -409,19 +420,24 @@ function MusicStudioPage({
                             onPlay={() => {
                                 if (globalEditor) {
                                     globalEditor.evaluate();
+                                    setIsPlaying(true);
                                 }
                             }}
                             onStop={() => {
                                 if (globalEditor) {
                                     globalEditor.stop();
+                                    setIsPlaying(false);
                                 }
                             }}
                             onPreprocess={handlePreprocess}
                             onProcessPlay={handleProcessAndPlay}
+                            onSave={handleSaveSettings}
+                            onLoad={handleLoadSettings}
+                            onOpenVisualizer={onOpenVisualizer}
                         />
                     </div>
 
-                    {/* Live Output */}
+                    {/* Live Output Display */}
                     <div className="output-card">
                         <div className="card-header">
                             <h2>📊 LIVE OUTPUT</h2>
@@ -442,31 +458,33 @@ function MusicStudioPage({
     );
 }
 
-// Code Editor Page - Just the code editor
 function CodeEditorPage({ 
     preprocessText, 
     setPreprocessText, 
-    p1Mode, setP1Mode, 
-    p2Checked, setP2Checked, 
-    p3Checked, setP3Checked,
-    p4Checked, setP4Checked,
-    p5Checked, setP5Checked,
-    p6Checked, setP6Checked,
-    volume, setVolume,
-    reverbVol, setReverbVol,
-    melodyVol, setMelodyVol,
-    percussionVol, setPercussionVol,
-    tempo, setTempo 
+    p1Mode, 
+    p2Checked, 
+    p3Checked,
+    p4Checked,
+    p5Checked,
+    p6Checked,
+    volume, 
+    reverbVol,
+    melodyVol,
+    percussionVol,
+    tempo,
+    isPlaying,
+    onOpenVisualizer
 }) {
     return (
         <div className="code-page">
             <div className="code-header">
                 <h1>💻 CODE EDITOR</h1>
-                <p>Edit and experiment with Strudel code</p>
+                <p>Edit and experiment with Strudel code - Visual feedback enabled</p>
             </div>
 
-            <div className="code-layout">
-                <div className="editor-card">
+            <div className="code-single-column">
+                {/* Code Editor Card */}
+                <div className="editor-card-full">
                     <div className="card-header">
                         <h2>🎹 LIVE CODE EDITOR</h2>
                         <div className="editor-actions">
@@ -481,6 +499,12 @@ function CodeEditorPage({
                             >
                                 ⚡ RUN CODE
                             </button>
+                            <button 
+                                className="action-btn secondary"
+                                onClick={onOpenVisualizer}
+                            >
+                                📊 Full Visualizer
+                            </button>
                         </div>
                     </div>
                     <PreprocessingEditor 
@@ -489,124 +513,22 @@ function CodeEditorPage({
                     />
                 </div>
 
-                <div className="quick-controls-card">
-                    <div className="card-header">
-                        <h2>⚡ QUICK CONTROLS</h2>
-                    </div>
-                    
-                    <div className="quick-controls">
-                        <div className="control-group">
-                            <label>🥁 Drums</label>
-                            <div className="toggle-group small">
-                                <button 
-                                    className={`toggle-btn small ${p1Mode === 'ON' ? 'toggle-active' : ''}`}
-                                    onClick={() => setP1Mode('ON')}
-                                >
-                                    ON
-                                </button>
-                                <button 
-                                    className={`toggle-btn small ${p1Mode === 'HUSH' ? 'toggle-active' : ''}`}
-                                    onClick={() => setP1Mode('HUSH')}
-                                >
-                                    MUTE
-                                </button>
-                            </div>
+                {/* Visualizer Section */}
+                <div className="code-visualizer-section">
+                    <div className="visualizer-header">
+                        <div className="visualizer-title">
+                            <h2>📊 REAL-TIME AUDIO VISUALIZATION</h2>
+                            <p>Live feedback from your Strudel code</p>
                         </div>
-
-                        <div className="control-group">
-                            <label>🎸 Bass</label>
-                            <label className="switch small">
-                                <input 
-                                    type="checkbox"
-                                    checked={p2Checked}
-                                    onChange={(e) => setP2Checked(e.target.checked)}
-                                />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        <div className="control-group">
-                            <label>🔊 Hi-Hats</label>
-                            <label className="switch small">
-                                <input 
-                                    type="checkbox"
-                                    checked={p3Checked}
-                                    onChange={(e) => setP3Checked(e.target.checked)}
-                                />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        <div className="control-group">
-                            <label>🌊 Reverb</label>
-                            <label className="switch small">
-                                <input 
-                                    type="checkbox"
-                                    checked={p4Checked}
-                                    onChange={(e) => setP4Checked(e.target.checked)}
-                                />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        <div className="control-group">
-                            <label>🎼 Melody</label>
-                            <label className="switch small">
-                                <input 
-                                    type="checkbox"
-                                    checked={p5Checked}
-                                    onChange={(e) => setP5Checked(e.target.checked)}
-                                />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        <div className="control-group">
-                            <label>🥊 Percussion</label>
-                            <label className="switch small">
-                                <input 
-                                    type="checkbox"
-                                    checked={p6Checked}
-                                    onChange={(e) => setP6Checked(e.target.checked)}
-                                />
-                                <span className="slider"></span>
-                            </label>
-                        </div>
-
-                        <div className="control-group">
-                            <label>🔊 Volume: {volume}</label>
-                            <input 
-                                type="range" 
-                                min="0"
-                                max="5"
-                                step="0.5"
-                                value={volume}
-                                onChange={(e) => setVolume(parseFloat(e.target.value))}
-                                className="volume-slider"
-                            />
-                        </div>
-
-                        <div className="control-group">
-                            <label>⚡ Tempo: {tempo}</label>
-                            <input 
-                                type="number" 
-                                value={tempo}
-                                onChange={(e) => setTempo(parseInt(e.target.value) || 140)}
-                                className="tempo-input"
-                            />
-                        </div>
-
                         <button 
-                            className="action-btn secondary full-width"
-                            onClick={() => {
-                                if (globalEditor != null) {
-                                    Proc(preprocessText, p2Checked, p3Checked, volume, tempo, p1Mode, p4Checked, p5Checked, p6Checked, reverbVol, melodyVol, percussionVol);
-                                    globalEditor.evaluate();
-                                }
-                            }}
+                            className="expand-visualizer-btn"
+                            onClick={onOpenVisualizer}
                         >
-                            🎵 APPLY & PLAY
+                            🔍 Expand Full View
                         </button>
+                    </div>
+                    <div className="compact-visualizer">
+                        <AudioVisualizer isPlaying={isPlaying} />
                     </div>
                 </div>
             </div>
@@ -630,6 +552,46 @@ export default function StrudelDemo() {
     const [percussionVol, setPercussionVol] = useState(0.5);
     const [tempo, setTempo] = useState(140);
     const [processedCode, setProcessedCode] = useState('');
+    const [isVisualizerOpen, setIsVisualizerOpen] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    const handleSaveSettings = () => {
+        const settings = {
+            p1Mode, p2Checked, p3Checked, p4Checked, p5Checked, p6Checked,
+            volume, reverbVol, melodyVol, percussionVol, tempo,
+            preprocessText,
+            savedAt: new Date().toISOString()
+        };
+        saveSettings(settings);
+        alert('✅ Settings saved!');
+    };
+    
+    const handleLoadSettings = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            loadSettings(file)
+                .then(settings => {
+                    setP1Mode(settings.p1Mode || 'ON');
+                    setP2Checked(settings.p2Checked ?? true);
+                    setP3Checked(settings.p3Checked ?? true);
+                    setP4Checked(settings.p4Checked ?? true);
+                    setP5Checked(settings.p5Checked ?? true);
+                    setP6Checked(settings.p6Checked ?? true);
+                    setVolume(settings.volume || 2);
+                    setReverbVol(settings.reverbVol || 0.3);
+                    setMelodyVol(settings.melodyVol || 1);
+                    setPercussionVol(settings.percussionVol || 0.5);
+                    setTempo(settings.tempo || 140);
+                    if (settings.preprocessText) {
+                        setPreprocessText(settings.preprocessText);
+                    }
+                    alert('✅ Settings loaded!');
+                })
+                .catch(error => {
+                    alert('❌ Error loading settings: ' + error.message);
+                });
+        }
+    };
 
     useEffect(() => {
         if (!hasRun.current) {
@@ -637,12 +599,14 @@ export default function StrudelDemo() {
             console_monkey_patch();
             hasRun.current = true;
             
+            // Setup piano roll canvas
             const canvas = document.getElementById('roll');
             canvas.width = canvas.width * 2;
             canvas.height = canvas.height * 2;
             const drawContext = canvas.getContext('2d');
             const drawTime = [-2, 2];
             
+            // Initialize Strudel editor
             globalEditor = new StrudelMirror({
                 defaultOutput: webaudioOutput,
                 getTime: () => getAudioContext().currentTime,
@@ -663,6 +627,7 @@ export default function StrudelDemo() {
                 },
             });
             
+            // Load default tune after a brief delay
             setTimeout(() => {
                 setPreprocessText(stranger_tune);
                 if (globalEditor) {
@@ -714,6 +679,11 @@ export default function StrudelDemo() {
                         tempo={tempo}
                         setTempo={setTempo}
                         setProcessedCode={setProcessedCode}
+                        handleSaveSettings={handleSaveSettings}    
+                        handleLoadSettings={handleLoadSettings}
+                        onOpenVisualizer={() => setIsVisualizerOpen(true)}
+                        isPlaying={isPlaying}           
+                        setIsPlaying={setIsPlaying} 
                     />
                 )}
                 
@@ -743,9 +713,17 @@ export default function StrudelDemo() {
                         setPercussionVol={setPercussionVol}
                         tempo={tempo}
                         setTempo={setTempo}
+                        isPlaying={isPlaying}                           
+                        onOpenVisualizer={() => setIsVisualizerOpen(true)}
                     />
                 )}
             </main>
+            
+            <VisualizerModal 
+                isOpen={isVisualizerOpen}
+                onClose={() => setIsVisualizerOpen(false)}
+                isPlaying={isPlaying}
+            />
             
             <canvas id="roll"></canvas>
         </div>
