@@ -1,3 +1,53 @@
+/* Fix body and html to prevent white space */
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+  background-color: var(--primary-bg);
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--primary-bg);
+}
+
+/* Hide the canvas that causes white space */
+#roll {
+  position: fixed;
+  bottom: -1000px; /* Move it off-screen */
+  left: -1000px;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Fix main app container */
+.strudel-app {
+  width: 100%;
+  min-height: 100vh;
+  background-color: var(--primary-bg);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.app-main {
+  flex: 1;
+  width: 100%;
+  background-color: var(--primary-bg);
+  overflow-x: hidden;
+}
+
+/* Prevent individual sections from creating white space */
+.studio-page,
+.code-page {
+  width: 100%;
+  min-height: calc(100vh - 60px); /* Subtract navbar height */
+  background-color: var(--primary-bg);
+}
+
 /* Modern Dark Theme Variables */
 :root {
   --primary-bg: #0a0a0f;
@@ -920,4 +970,256 @@ input:checked + .slider:before {
 
 .glow-effect:hover {
   box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+}
+/* ===== AUDIO VISUALIZER ===== */
+.visualizer-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+}
+
+.visualizer-status {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.status-indicator {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  border: 2px solid;
+}
+
+.status-active {
+  background: linear-gradient(135deg, #00ff88, #00dd77);
+  color: var(--primary-bg);
+  border-color: #00ff88;
+  animation: pulse-active 2s infinite;
+}
+
+.status-inactive {
+  background: rgba(136, 136, 204, 0.1);
+  color: var(--text-muted);
+  border-color: var(--text-muted);
+}
+
+@keyframes pulse-active {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+  }
+}
+
+.visualizer-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.visualizer-section h3 {
+  color: #00d4ff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  margin: 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.waveform-svg, .meter-svg {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  padding: 10px;
+}
+
+.waveform-svg:hover, .meter-svg:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+/* Code Page Single Column Layout */
+.code-single-column {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Full Width Editor Card */
+.editor-card-full {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.editor-card-full .card-header {
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(168, 85, 247, 0.05));
+  border-bottom: 2px solid var(--accent);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.editor-card-full .card-header h2 {
+  color: var(--accent);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.editor-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, var(--accent), #00ff88);
+  color: var(--primary-bg);
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+}
+
+.action-btn.secondary {
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+  border: 2px solid #a855f7;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.action-btn.secondary:hover {
+  background: rgba(168, 85, 247, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(168, 85, 247, 0.3);
+}
+
+/* Visualizer Section Improvements */
+.code-visualizer-section {
+  width: 100%;
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 212, 255, 0.05));
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 8px 32px rgba(0, 212, 255, 0.1);
+}
+
+.visualizer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--accent);
+}
+
+.visualizer-title h2 {
+  color: var(--accent);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.visualizer-title p {
+  color: #8888cc;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.expand-visualizer-btn {
+  background: linear-gradient(135deg, #a855f7, #00d4ff);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.expand-visualizer-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.5);
+}
+
+/* Compact Visualizer Grid */
+.compact-visualizer {
+  width: 100%;
+}
+
+.compact-visualizer .visualizer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.compact-visualizer .visualizer-section-large {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.compact-visualizer .visualizer-section-large h3 {
+  color: #00d4ff;
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  letter-spacing: 1px;
+}
+
+.compact-visualizer .stats-panel {
+  grid-column: span 2;
+  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(168, 85, 247, 0.05));
+  border: 2px solid rgba(0, 212, 255, 0.3);
+}
+
+/* Make visualizations responsive */
+@media (max-width: 1200px) {
+  .compact-visualizer .visualizer-grid {
+      grid-template-columns: 1fr;
+  }
+  
+  .compact-visualizer .stats-panel {
+      grid-column: span 1;
+  }
+}
+
+/* Remove old code-layout styles if they exist */
+.code-layout {
+  display: none;
 }
