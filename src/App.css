@@ -740,3 +740,88 @@ input:checked + .slider:before {
 .glow-effect:hover {
   box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
 }
+
+/* Code Visualizer Section */
+.code-visualizer-section {
+  width: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.visualizer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--accent);
+}
+
+.visualizer-header h2 {
+  color: var(--accent);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: 2px;
+}
+
+.expand-visualizer-btn {
+  background: linear-gradient(135deg, #a855f7, #00d4ff);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.expand-visualizer-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.4);
+}
+
+.compact-visualizer {
+  width: 100%;
+}
+
+/* Make visualizer more compact in code editor view */
+.compact-visualizer .visualizer-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.compact-visualizer .visualizer-section-large {
+  padding: 1rem;
+}
+
+.compact-visualizer .visualizer-section-large h3 {
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.compact-visualizer .waveform-svg-large,
+.compact-visualizer .meter-svg-large,
+.compact-visualizer .spectrum-svg-large {
+  max-height: 150px;
+}
+
+.compact-visualizer .stats-panel {
+  grid-column: span 3;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1400px) {
+  .compact-visualizer .visualizer-grid {
+      grid-template-columns: 1fr;
+  }
+  
+  .compact-visualizer .stats-panel {
+      grid-column: span 1;
+  }
+}

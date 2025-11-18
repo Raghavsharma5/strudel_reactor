@@ -1,6 +1,6 @@
 import React from 'react';
 
-function AudioControls({ onPlay, onStop, onPreprocess, onProcessPlay, onSave, onLoad }) {
+function AudioControls({ onPlay, onStop, onPreprocess, onProcessPlay, onSave, onLoad, onOpenVisualizer }) {
     return (
         <div className="audio-controls">
             <div className="d-grid gap-2">
@@ -37,16 +37,29 @@ function AudioControls({ onPlay, onStop, onPreprocess, onProcessPlay, onSave, on
                     🔄 Preprocess Only
                 </button>
 
-                
+                <button 
+                    className="btn btn-outline-primary"
+                    onClick={onOpenVisualizer}
+                    style={{
+                        background: 'linear-gradient(135deg, #a855f7, #00d4ff)',
+                        color: 'white',
+                        border: 'none',
+                        fontWeight: '700'
+                    }}
+                >
+                    📊 View Visualizer
+                </button>
+
+                {/* Save/Load Settings */}
                 <div className="btn-group w-100 mt-2" role="group">
                     <button 
                         className="btn btn-outline-primary"
                         onClick={onSave}
                     >
-                        💾 Save Settings
+                        💾 Save
                     </button>
                     <label className="btn btn-outline-primary" style={{margin: 0, cursor: 'pointer'}}>
-                        📂 Load Settings
+                        📂 Load
                         <input 
                             type="file" 
                             accept=".json"
@@ -63,7 +76,7 @@ function AudioControls({ onPlay, onStop, onPreprocess, onProcessPlay, onSave, on
                 border: '1px solid var(--border)'
             }}>
                 <small className="text-muted">
-                    💡 Tip: Save your settings to reuse them later!
+                    💡 Click "View Visualizer" for audio analysis!
                 </small>
             </div>
         </div>
